@@ -1,0 +1,147 @@
+# Create a namespace with label knative-eventing-injection: enabled
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kn-eventing-sample
+  labels:
+    knative-eventing-injection: enabled
+
+---
+
+# Deployment for event-display-dev
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-display-dev
+  namespace: kn-eventing-sample
+spec:
+  replicas: 1
+  selector:
+    matchLabels: &labels
+      app: event-display-dev
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      containers:
+        - name: event-display
+          # Source code: https://github.com/knative/eventing-sources/blob/release-0.6/cmd/event_display/main.go
+          image: gcr.io/knative-releases/github.com/knative/eventing-sources/cmd/event_display@sha256:37ace92b63fc516ad4c8331b6b3b2d84e4ab2d8ba898e387c0b6f68f0e3081c4
+
+---
+
+# Service for event-display-dev
+kind: Service
+apiVersion: v1
+metadata:
+  name: event-display-dev
+  namespace: kn-eventing-sample
+spec:
+  selector:
+    app: event-display-dev
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+
+---
+
+# Trigger to route events to event-display-dev K8s Service
+apiVersion: eventing.knative.dev/v1alpha1
+kind: Trigger
+metadata:
+  name: event-display-dev
+  namespace: kn-eventing-sample
+spec:
+  filter:
+    sourceAndType:
+      type: knative.eventing.hello_world
+      source: https://knative.eventing.dev
+  subscriber:
+    ref:
+     apiVersion: v1
+     kind: Service
+     name: event-display-dev
+
+---
+
+# Deployment for event-display-test
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-display-test
+  namespace: kn-eventing-sample
+spec:
+  replicas: 1
+  selector:
+    matchLabels: &labels
+      app: event-display-test
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      containers:
+        - name: event-display
+          # Source code: https://github.com/knative/eventing-sources/blob/release-0.6/cmd/event_display/main.go
+          image: gcr.io/knative-releases/github.com/knative/eventing-sources/cmd/event_display@sha256:37ace92b63fc516ad4c8331b6b3b2d84e4ab2d8ba898e387c0b6f68f0e3081c4
+
+---
+
+# Service for event-display-test
+kind: Service
+apiVersion: v1
+metadata:
+  name: event-display-test
+  namespace: kn-eventing-sample
+spec:
+  selector:
+    app: event-display-test
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+
+---
+
+# Trigger to route events to event-display-test K8s Service
+apiVersion: eventing.knative.dev/v1alpha1
+kind: Trigger
+metadata:
+  name: event-display-test
+  namespace: kn-eventing-sample
+spec:
+  filter:
+    sourceAndType:
+      type: knative.eventing.hello_world
+      source: https://knative.eventing.test
+  subscriber:
+    ref:
+     apiVersion: v1
+     kind: Service
+     name: event-display-test
+
+---
+
+# Pod with busyboxplus:curl image that will be used to send events
+
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: curl
+  name: curl
+  namespace: kn-eventing-sample
+spec:
+  containers:
+  - image: radial/busyboxplus:curl
+    imagePullPolicy: IfNotPresent
+    name: curl
+    resources: {}
+    stdin: true
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    tty: true
+---
+
+
+    
