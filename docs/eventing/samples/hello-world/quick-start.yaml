@@ -8,17 +8,17 @@ metadata:
 
 ---
 
-# Deployment for event-display-dev
+# Deployment for foo-consumer
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: event-display-dev
+  name: foo-consumer
   namespace: kn-eventing-sample
 spec:
   replicas: 1
   selector:
     matchLabels: &labels
-      app: event-display-dev
+      app: foo-consumer
   template:
     metadata:
       labels: *labels
@@ -30,15 +30,15 @@ spec:
 
 ---
 
-# Service for event-display-dev
+# Service for foo-consumer
 kind: Service
 apiVersion: v1
 metadata:
-  name: event-display-dev
+  name: foo-consumer
   namespace: kn-eventing-sample
 spec:
   selector:
-    app: event-display-dev
+    app: foo-consumer
   ports:
   - protocol: TCP
     port: 80
@@ -46,36 +46,36 @@ spec:
 
 ---
 
-# Trigger to route events to event-display-dev K8s Service
+# Trigger to route events to foo-consumer K8s Service
 apiVersion: eventing.knative.dev/v1alpha1
 kind: Trigger
 metadata:
-  name: event-display-dev
+  name: foo-consumer
   namespace: kn-eventing-sample
 spec:
   filter:
     sourceAndType:
-      type: knative.eventing.hello_world
-      source: https://knative.eventing.dev
+      type: hello_world
+      source: //foo
   subscriber:
     ref:
      apiVersion: v1
      kind: Service
-     name: event-display-dev
+     name: foo-consumer
 
 ---
 
-# Deployment for event-display-test
+# Deployment for bar-consumer
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: event-display-test
+  name: bar-consumer
   namespace: kn-eventing-sample
 spec:
   replicas: 1
   selector:
     matchLabels: &labels
-      app: event-display-test
+      app: bar-consumer
   template:
     metadata:
       labels: *labels
@@ -87,15 +87,15 @@ spec:
 
 ---
 
-# Service for event-display-test
+# Service for bar-consumer
 kind: Service
 apiVersion: v1
 metadata:
-  name: event-display-test
+  name: bar-consumer
   namespace: kn-eventing-sample
 spec:
   selector:
-    app: event-display-test
+    app: bar-consumer
   ports:
   - protocol: TCP
     port: 80
@@ -103,22 +103,22 @@ spec:
 
 ---
 
-# Trigger to route events to event-display-test K8s Service
+# Trigger to route events to bar-consumer K8s Service
 apiVersion: eventing.knative.dev/v1alpha1
 kind: Trigger
 metadata:
-  name: event-display-test
+  name: bar-consumer
   namespace: kn-eventing-sample
 spec:
   filter:
     sourceAndType:
-      type: knative.eventing.hello_world
-      source: https://knative.eventing.test
+      type: hello_world
+      source: //bar
   subscriber:
     ref:
      apiVersion: v1
      kind: Service
-     name: event-display-test
+     name: bar-consumer
 
 ---
 
